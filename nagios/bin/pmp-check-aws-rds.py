@@ -61,13 +61,30 @@ def main():
     # DB instance classes as listed on http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
     db_classes = {'db.t1.micro': 0.61,
                   'db.m1.small': 1.7,
-                  'db.m1.medium': 3.75,
-                  'db.m1.large': 7.5,
-                  'db.m1.xlarge': 15,
+
+                  'db.m3.medium': 3.75,
+                  'db.m3.large': 7.5,
+                  'db.m3.xlarge': 15,
+                  'db.m3.2xlarge': 30,
+
+                  'db.r3.large': 15,
+                  'db.r3.xlarge': 30.5,
+                  'db.r3.2xlarge': 61,
+                  'db.r3.4xlarge': 122,
+                  'db.r3.8xlarge': 244,
+
+                  'db.t2.micro': 1,
+                  'db.t2.small': 2,
+                  'db.t2.medium': 4,
+
                   'db.m2.xlarge': 17.1,
                   'db.m2.2xlarge': 34,
                   'db.m2.4xlarge': 68,
-                  'db.cr1.8xlarge': 244}
+                  'db.cr1.8xlarge': 244,
+
+                  'db.m1.medium': 3.75,
+                  'db.m1.large': 7.5,
+                  'db.m1.xlarge': 15}
 
     # RDS metrics as listed on http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/rds-metricscollected.html
     metrics = {'status': 'RDS availability',
@@ -276,7 +293,7 @@ pmp-check-aws-rds.py - Check Amazon RDS metrics.
     -u UNIT, --unit=UNIT  unit of thresholds for "storage" and "memory" metrics:
                           [percent, GB]. Default: percent
 
-=head1 REQUIREMENTS 
+=head1 REQUIREMENTS
 
 This plugin is written on Python and utilizes the module C<boto> (Python interface
 to Amazon Web Services) to get various RDS metrics from CloudWatch and compare
@@ -315,7 +332,7 @@ To get the list of all RDS instances under AWS account:
 
   # ./aws-rds-nagios-check.py -l
 
-To get the detailed status of RDS instance identified as C<blackbox>: 
+To get the detailed status of RDS instance identified as C<blackbox>:
 
   # ./aws-rds-nagios-check.py -i blackbox -p
 
@@ -326,7 +343,7 @@ of the checks dependent from this one:
   OK mysql 5.1.63. Status: available
 
 Nagios check for CPU utilization, specify thresholds as percentage of
-1-min., 5-min., 15-min. average accordingly: 
+1-min., 5-min., 15-min. average accordingly:
 
   # ./aws-rds-nagios-check.py -i blackbox -m load -w 90,85,80 -c 98,95,90
   OK Load average: 18.36%, 18.51%, 15.95% | load1=18.36;90.0;98.0;0;100 load5=18.51;85.0;95.0;0;100 load15=15.95;80.0;90.0;0;100
@@ -338,7 +355,7 @@ Nagios check for the free memory, specify thresholds as percentage:
   # ./aws-rds-nagios-check.py -i blackbox -m memory -u GB -w 4 -c 2
   OK Free memory: 5.90 GB (9%) of 68 GB | free_memory=5.9;4.0;2.0;0;68
 
-Nagios check for the free storage space, specify thresholds as percentage or GB: 
+Nagios check for the free storage space, specify thresholds as percentage or GB:
 
   # ./aws-rds-nagios-check.py -i blackbox -m storage -w 10 -c 5
   OK Free storage: 162.55 GB (33%) of 500.0 GB | free_storage=32.51;10.0;5.0;0;100
@@ -352,39 +369,39 @@ Here is the excerpt of potential Nagios config:
   define servicedependency{
         hostgroup_name                  mysql-servers
         service_description             RDS Status
-        dependent_service_description   RDS Load Average, RDS Free Storage, RDS Free Memory 
+        dependent_service_description   RDS Load Average, RDS Free Storage, RDS Free Memory
         execution_failure_criteria      w,c,u,p
         notification_failure_criteria   w,c,u,p
         }
-  
+
   define service{
         use                             active-service
         hostgroup_name                  mysql-servers
         service_description             RDS Status
         check_command                   check_rds!status!0!0
         }
-       
+
   define service{
         use                             active-service
         hostgroup_name                  mysql-servers
         service_description             RDS Load Average
         check_command                   check_rds!load!90,85,80!98,95,90
         }
-  
+
   define service{
         use                             active-service
         hostgroup_name                  mysql-servers
         service_description             RDS Free Storage
         check_command                   check_rds!storage!10!5
         }
-  
+
   define service{
         use                             active-service
         hostgroup_name                  mysql-servers
         service_description             RDS Free Memory
         check_command                   check_rds!memory!5!2
         }
-  
+
   define command{
         command_name    check_rds
         command_line    $USER1$/pmp-check-aws-rds.py -i $HOSTALIAS$ -m $ARG1$ -w $ARG2$ -c $ARG3$
